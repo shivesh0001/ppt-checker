@@ -1,0 +1,29 @@
+*What the output looks like*
+```
+==================================================
+=== POWERPOINT INCONSISTENCY REPORT ===
+==================================================
+Slides Analyzed: 8
+Issues Found: 3
+
+1. Numerical Conflict (Confidence: 0.9)
+   Slides: 3, 7
+   Issue: Revenue figures conflict for same period
+   Evidence:
+   - Q4 2024 revenue: $2.5M
+   - Annual 2024 revenue: $2.0M
+
+2. Timeline Mismatch (Confidence: 0.8)
+   Slides: 1, 4
+   Issue: Project timeline shows impossible sequence
+   Evidence:
+   - Project starts: Q2 2025
+   - Milestone 1 completion: Q1 2025
+
+3. Data Relationship Error (Confidence: 0.9)
+   Slides: 5, 6
+   Issue: Quarterly breakdown doesn't sum to annual total
+   Evidence:
+   - Q1-Q4 sum: 47 hours saved
+   - Annual total claimed: 52 hours saved
+```
