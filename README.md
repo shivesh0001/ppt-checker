@@ -130,7 +130,7 @@ python cli.py presentation.pptx --api-key YOUR_KEY --ocr --batch-size 8 --output
 
 ### API Usage
 - **Model**: Google Gemini 2.0 Flash Experimental
-- **Average API Calls**: 2-3 calls per batch + 1 global analysis
+- **Average API Calls**: 1 calls per batch + 1 global analysis
 - **Cost Estimation**: ~$0.01-0.05 per presentation (varies by size)
 - **Rate Limits**: Respects Google's default limits with built-in delays
 

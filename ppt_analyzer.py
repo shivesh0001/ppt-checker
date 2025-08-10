@@ -26,7 +26,7 @@ class PPTAnalyzer:
         # Setup the Gemini AI client
         try:
             genai.configure(api_key=self.api_key)
-            self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
         except Exception as e:
             raise Exception(f"Failed to setup Gemini API: {e}")
     
