@@ -9,7 +9,6 @@ from models import Inconsistency, SlideContent
 try:
     from pptx import Presentation
     import google.generativeai as genai
-    import pytesseract
 except ImportError as e:
     print(f"Error: Missing required dependency - {e}")
     print("Please install dependencies: pip install python-pptx google-generativeai pillow pytesseract")
@@ -21,9 +20,9 @@ class PPTAnalyzer:
         self.api_key = api_key
         self.batch_size = batch_size
         self.model = None
-        self._setup_gemini()
+        self.setup_gemini()
     
-    def _setup_gemini(self):
+    def setup_gemini(self):
         # Setup the Gemini AI client
         try:
             genai.configure(api_key=self.api_key)
@@ -38,12 +37,12 @@ class PPTAnalyzer:
             slides = []
             
             for i, slide in enumerate(presentation.slides, 1):
-                text = self._get_slide_text(slide)
+                text = self.get_slide_text(slide)
                 ocr_text = ""
                 
                 if use_ocr:
                     try:
-                        ocr_text = self._get_ocr_text(slide)
+                        ocr_text = self.get_ocr_text(slide)
                     except:
                         print(f"Warning: OCR failed for slide {i}")
                 
@@ -58,7 +57,7 @@ class PPTAnalyzer:
         except Exception as e:
             raise Exception(f"Failed to extract content from PowerPoint: {e}")
     
-    def _get_slide_text(self, slide) -> str:
+    def get_slide_text(self, slide) -> str:
         # Pull out all the text from a slide
         text_parts = []
         
@@ -75,7 +74,7 @@ class PPTAnalyzer:
         
         return "\n".join(text_parts)
     
-    def _get_ocr_text(self, slide) -> str:
+    def get_ocr_text(self, slide) -> str:
         # Try to extract text from images using OCR
         ocr_text = []
         
@@ -94,21 +93,21 @@ class PPTAnalyzer:
         print(f"Analyzing {len(slides)} slides for inconsistencies...")
         
         # First pass: check slides in small batches
-        batch_results = self._batch_analysis(slides)
+        batch_results = self.batch_analysis(slides)
         
         # Second pass: look for issues across all slides  
-        global_results = self._cross_slide_analysis(slides)
+        global_results = self.cross_slide_analysis(slides)
         
         # Combine everything and filter out low confidence findings
         all_issues = batch_results + global_results
         good_issues = [issue for issue in all_issues if issue.confidence >= 0.7]
         
         # Clean up duplicates
-        final_issues = self._remove_duplicates(good_issues)
+        final_issues = self.remove_duplicates(good_issues)
         
         return final_issues
     
-    def _batch_analysis(self, slides: List[SlideContent]) -> List[Inconsistency]:
+    def batch_analysis(self, slides: List[SlideContent]) -> List[Inconsistency]:
         issues = []
         
         for i in range(0, len(slides), self.batch_size):
@@ -117,7 +116,7 @@ class PPTAnalyzer:
             print(f"Processing batch {batch_num} ({len(batch)} slides)...")
             
             try:
-                batch_issues = self._analyze_batch(batch)
+                batch_issues = self.analyze_batch(batch)
                 issues.extend(batch_issues)
                 time.sleep(1)  # don't hammer the API
             except:
@@ -126,41 +125,41 @@ class PPTAnalyzer:
         
         return issues
     
-    def _cross_slide_analysis(self, slides: List[SlideContent]) -> List[Inconsistency]:
+    def cross_slide_analysis(self, slides: List[SlideContent]) -> List[Inconsistency]:
         print("Checking for issues across all slides...")
         
         # Create summary of important numbers/dates from all slides
-        summary = self._create_slide_summary(slides)
+        summary = self.create_slide_summary(slides)
         
         try:
-            return self._analyze_global_stuff(summary, slides)
+            return self.analyze_global_stuff(summary, slides)
         except:
             print("Warning: Global analysis failed")
             return []
     
-    def _analyze_batch(self, batch: List[SlideContent]) -> List[Inconsistency]:        
+    def analyze_batch(self, batch: List[SlideContent]) -> List[Inconsistency]:        
         # Format slides for the AI to analyze
-        batch_text = self._format_slides(batch)
-        prompt = self._build_prompt(batch_text, is_batch=True)
+        batch_text = self.format_slides(batch)
+        prompt = self.build_prompt(batch_text, is_batch=True)
         
         try:
             response = self.model.generate_content(prompt)
-            return self._parse_response(response.text, batch)
+            return self.parse_response(response.text, batch)
         except:
             print("API call failed")
             return []
     
-    def _analyze_global_stuff(self, summary: str, slides: List[SlideContent]) -> List[Inconsistency]:
-        prompt = self._build_prompt(summary, is_batch=False)
+    def analyze_global_stuff(self, summary: str, slides: List[SlideContent]) -> List[Inconsistency]:
+        prompt = self.build_prompt(summary, is_batch=False)
         
         try:
             response = self.model.generate_content(prompt)
-            return self._parse_response(response.text, slides)
+            return self.parse_response(response.text, slides)
         except:
             print("Global analysis API call failed")
             return []
     
-    def _format_slides(self, batch: List[SlideContent]) -> str:
+    def format_slides(self, batch: List[SlideContent]) -> str:
         parts = []
         
         for slide in batch:
@@ -172,7 +171,7 @@ class PPTAnalyzer:
         
         return "\n\n".join(parts)
     
-    def _create_slide_summary(self, slides: List[SlideContent]) -> str:
+    def create_slide_summary(self, slides: List[SlideContent]) -> str:
         # Extract important numbers and dates from each slide
         summary_parts = []
         
@@ -187,7 +186,7 @@ class PPTAnalyzer:
         
         return "\n".join(summary_parts)
     
-    def _build_prompt(self, content: str, is_batch: bool = True) -> str:
+    def build_prompt(self, content: str, is_batch: bool = True) -> str:
         scope = "within these slides" if is_batch else "across the entire presentation"
         
         prompt = f"""You are an expert business analyst reviewing a PowerPoint presentation for inconsistencies. 
@@ -228,7 +227,7 @@ If no genuine inconsistencies are found, return: {{"inconsistencies": []}}
 """
         return prompt
     
-    def _parse_response(self, response_text: str, slides: List[SlideContent]) -> List[Inconsistency]:
+    def parse_response(self, response_text: str, slides: List[SlideContent]) -> List[Inconsistency]:
         try:
             # Clean up the response text  
             text = response_text.strip()
@@ -260,7 +259,7 @@ If no genuine inconsistencies are found, return: {{"inconsistencies": []}}
             print("Warning: Error parsing AI response")
             return []
     
-    def _remove_duplicates(self, issues: List[Inconsistency]) -> List[Inconsistency]:
+    def remove_duplicates(self, issues: List[Inconsistency]) -> List[Inconsistency]:
         unique_issues = []
         seen = set()
         
