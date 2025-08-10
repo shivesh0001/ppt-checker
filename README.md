@@ -24,7 +24,7 @@ The system processes PowerPoint files in two passes:
 1. **Batch analysis** - checks slides in groups of 6 for local inconsistencies
 2. **Cross-slide analysis** - looks across the entire presentation for global conflicts
 
-
+```
 PowerPoint File (.pptx)
     ↓
 Text Extraction (python-pptx)
@@ -32,7 +32,7 @@ Text Extraction (python-pptx)
 OCR Processing (pytesseract) [Optional]
     ↓
 Two-Pass Analysis:
-├── Batch Analysis (6 slides per batch by default)
+├── Batch Analysis (6 slides per batch)
 └── Cross-Slide Analysis (entire presentation)
     ↓
 AI Processing (Google Gemini 2.0 Flash)
@@ -40,18 +40,19 @@ AI Processing (Google Gemini 2.0 Flash)
 Result Filtering & Deduplication
     ↓
 Report Generation (Console + File)
-
+```
 
 **Project structure**
 
+```
 ppt-checker/
 ├── cli.py              # Command-line interface
 ├── ppt_analyzer.py     # Core analysis engine
 ├── models.py           # Data structures and report generation
 ├── presentation.pptx   # Sample presentation file
-├── ppt-env/           # Virtual environment
+├── ppt-env/           # Virtual environment (not in repo)
 └── README.md          # This file
-└── sample_output.txt   # what output will look like 
+``` 
 
 
 **Installation and Setup**
